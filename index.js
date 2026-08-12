@@ -3,8 +3,8 @@ const express = require('express');
 const path = require('path');
 
 // Importamos nuestros propios módulos
-const loggerMiddleware = require('./middlewares/logger');
-const mainRoutes = require('./routes/index'); 
+const loggerMiddleware = require('./src/middlewares/logger');
+const mainRoutes = require('./src/routes/index'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
