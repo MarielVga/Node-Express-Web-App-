@@ -1,6 +1,7 @@
 {
   "name": "Node & Express Web App ",
   "version": "1.0.0",
+  "types": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +10,7 @@
     "dev": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Mariela Vega",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
