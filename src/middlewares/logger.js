@@ -2,17 +2,17 @@ const fs = require('fs');
 const path = require('path');
 
 // Registrar las visitas
-app.use((req, res, next) => {
+const loggerMiddleware = ((req, res, next) => {
     // Obtenemos la fecha y hora actual
     const now = new Date();
     const date = now.toLocaleDateString();
     const time = now.toLocaleTimeString();
     
-    // Formato requerido: fecha, hora, ruta accedida
+    // Formato de fecha, hora y ruta accedida
     const logMessage = `Fecha: ${date} - Hora: ${time} - Ruta: ${req.url}\n`;
     
     // Ruta donde se guardará el archivo log (dentro de la carpeta logs)
-    const logPath = path.join(__dirname, 'logs', 'log.txt');
+    const logPath = path.join(__dirname, '..', '..', 'logs', 'log.txt');
     
     // Usamos fs.appendFile para agregar el registro sin borrar lo anterior
     fs.appendFile(logPath, logMessage, (err) => {
