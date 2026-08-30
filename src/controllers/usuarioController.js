@@ -59,4 +59,28 @@ const eliminarUsuario = async (req, res) => {
     }
 };
 
-module.exports = { crearUsuario, getUsuarios, actualizarUsuario, eliminarUsuario };
+// Obtener usuario y sus relaciones
+const getUsuarioConPedidos = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Uso obligatorio de 'include' según la rúbrica
+        const usuario = await Usuario.findByPk(id, {
+            include: [{
+                model: Pedido,
+                as: 'pedidos',
+                attributes: ['id', 'descripcion', 'total', 'createdAt'] // Filtramos lo que queremos ver
+            }]
+        });
+
+        if (!usuario) {
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+        }
+
+        res.json({ status: 'success', message: 'Datos anidados obtenidos', data: usuario });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+module.exports = { crearUsuario, getUsuarios, actualizarUsuario, eliminarUsuario, getUsuarioConPedidos };
