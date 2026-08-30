@@ -5,11 +5,21 @@ const path = require('path');
 // Importamos nuestros propios módulos
 const sequelize = require('./src/config/database');
 const Usuario = require('./src/models/Usuario');
+const Pedido = require('./src/models/Pedido')
 const loggerMiddleware = require('./src/middlewares/logger');
 const mainRoutes = require('./src/routes/index'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Relaciones
+Usuario.hasMany(Pedido, {
+    foreignKey: 'usuarioId', as: 'pedidos'
+})
+
+Pedido.belongsTo(Usuario,{
+    foreignKey: 'usuarioId', as: 'usuario'
+})
 
 // Middleware
 app.use(express.json()); // Permite recibir JSON en los POST/PUT
