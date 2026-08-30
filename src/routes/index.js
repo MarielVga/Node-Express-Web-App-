@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const usuariosRoutes = require('./usuarios');
 
 // Ruta 1 - Responde con HTML
 router.get('/bienvenida', (req, res) => {
     res.send(`
         <h1>Bienvenido a mi App Node & Express</h1>
-        <p>Este es el proyecto final del Módulo 6.</p>
+        <p>Este es el proyecto final del Módulo 6 y 7.</p>
         <a href="/">Volver al inicio estático</a>
     `);
 });
@@ -14,9 +15,11 @@ router.get('/bienvenida', (req, res) => {
 router.get('/status', (req, res) => {
     res.json({
         estado: 'Servidor funcionando correctamente',
-        modulo: 6,
+        modulo: 7,
         tecnologias: ['Node.js', 'Express', 'fs', 'Express Router']
     });
 });
+
+router.use('/usuarios', usuariosRoutes)
 
 module.exports = router;
