@@ -1,4 +1,5 @@
 const Usuario = require('../models/Usuario');
+const Pedido = require('../models/Pedido');
 
 // CREATE: Insertar un nuevo registro
 const crearUsuario = async (req, res) => {
