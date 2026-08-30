@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+const sequelize = require('../config/database'); // Necesario para iniciar la transacción
 const Usuario = require('../models/Usuario');
 const Pedido = require('../models/Pedido');
 
@@ -84,4 +87,63 @@ const getUsuarioConPedidos = async (req, res) => {
     }
 };
 
-module.exports = { crearUsuario, getUsuarios, actualizarUsuario, eliminarUsuario, getUsuarioConPedidos };
+// Transaccionalidad
+const crearUsuarioConPedido = async (req, res) => {
+    // Iniciamos la transacción gestionada por Sequelize
+    const t = await sequelize.transaction();
+
+    try {
+        // Recibimos datos del usuario y del pedido en la misma petición
+        const { nombre, email, descripcion_pedido, total_pedido } = req.body;
+
+        // Creamos el usuario asegurando pasarle el objeto de transacción ( transaction: t )
+        const nuevoUsuario = await Usuario.create({ nombre, email }, { transaction: t });
+
+        // Simulador de error: Si mandan la palabra 'forzar_error' como descripción, fallará a propósito
+        if (descripcion_pedido === 'forzar_error') {
+            throw new Error("Simulación de fallo para validar el Rollback");
+        }
+
+        // Creamos el pedido asociándolo al usuario recién creado
+        await Pedido.create({
+            descripcion: descripcion_pedido,
+            total: total_pedido,
+            usuarioId: nuevoUsuario.id
+        }, { transaction: t });
+
+        // Si ambas operaciones fueron exitosas, confirmamos los cambios (COMMIT)
+        await t.commit();
+        res.status(201).json({ 
+                                status: 'success', 
+                                message: 'Transacción completada: Usuario y Pedido creados con éxito.'
+                            });
+
+    } catch (error) {
+        // Si cualquier paso falla, deshacemos todo con ROLLBACK
+        await t.rollback();
+
+        // Guardamos el error en el archivo log.txt 
+        const logPath = path.join(__dirname, '..', '..', 'logs', 'log.txt');
+        const logMessage = `Fecha: ${new Date().toLocaleString()} - ERROR TRANSACCIÓN: ${error.message}\n`;
+        
+        fs.appendFile(logPath, logMessage, (err) => {
+            if (err) console.error('Error al guardar log de transacción');
+        });
+
+        res.status(500).json({ 
+            status: 'error', 
+            message: 'Transacción fallida, se ejecutó ROLLBACK', 
+            detalle: error.message 
+        });
+    }
+};
+
+// Exportación de los modulos
+module.exports = { 
+                    crearUsuario, 
+                    getUsuarios, 
+                    actualizarUsuario, 
+                    eliminarUsuario, 
+                    getUsuarioConPedidos, 
+                    crearUsuarioConPedido 
+                };
