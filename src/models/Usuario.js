@@ -11,6 +11,15 @@ const Usuario = sequelize.define('Usuario', {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: '123456' // Valor por defecto para registros antiguos
+    },
+    avatar_url: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     tableName: 'usuarios',
