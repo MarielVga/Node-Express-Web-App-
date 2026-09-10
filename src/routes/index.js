@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const usuariosRoutes = require('./usuarios');
+const authRoutes = require('./auth')
 
-// Ruta 1 - Responde con HTML
+// Ruta responde con HTML
 router.get('/bienvenida', (req, res) => {
     res.send(`
         <h1>Bienvenido a mi App Node & Express</h1>
@@ -11,7 +12,7 @@ router.get('/bienvenida', (req, res) => {
     `);
 });
 
-// Ruta 2 - Responde con JSON
+// Ruta responde con JSON
 router.get('/status', (req, res) => {
     res.json({
         estado: 'Servidor funcionando correctamente',
@@ -20,6 +21,8 @@ router.get('/status', (req, res) => {
     });
 });
 
-router.use('/usuarios', usuariosRoutes)
+router.use('/', authRoutes); // login
+router.use('/usuarios', usuariosRoutes);
+
 
 module.exports = router;
