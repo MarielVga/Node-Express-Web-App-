@@ -1,6 +1,6 @@
-# Proyecto: Node & Express Web App - Módulo 6 y 7
+# Proyecto: Node & Express Web App - Módulo 6, 7 y 8
 
-Este repositorio contiene la evolución del desarrollo de una aplicación web backend, abarcando la estructura base (Módulo 6) y la integración de persistencia de datos relacionales mediante un ORM (Módulo 7). El objetivo es levantar un servidor robusto, servir contenido web, y gestionar operaciones de base de datos con relaciones y transaccionalidad.
+Este repositorio contiene la evolución completa del desarrollo de una aplicación web backend. El proyecto abarca desde la estructura base del servidor (Módulo 6) y la integración de persistencia de datos relacionales mediante un ORM (Módulo 7), hasta consolidar una API RESTful profesional con rutas privadas, autenticación JWT y subida de archivos. Este proyecto final demuestra el dominio en seguridad, arquitectura de APIs y manejo de servicios para un perfil de desarrollador backend.
 
 ## ⚙️ Requisitos del sistema
 - **Node.js**: v18.0.0 o superior.
@@ -28,6 +28,7 @@ Este repositorio contiene la evolución del desarrollo de una aplicación web ba
    DB_NAME=alkemy_db
    DB_PORT=5432
    PORT=3000
+   JWT_SECRET=clave_secreta
    ```
 5. Asegurate de haber creado previamente la base de datos con nombre `alkemy_db`
 
@@ -50,12 +51,12 @@ El proyecto incluye dos scripts principales configurados en el `package.json`:
 El proyecto sigue una arquitectura modular orientada a separar responsabilidades:
 
 - `/config`: Archivos de configuración, incluyendo la conexión a la base de datos PostgreSQL.
-- `/controllers`: Contiene la lógica de negocio y las funciones asincronas para el manejo de datos.
+- `/controllers`: Contiene la lógica de negocio y las funciones asincronas para el manejo de datos, encriptación de contraseñas y generación de tokens.
 - `/logs`: Almacena la persistencia en archivos planos (`log.txt`).
-- `/middlewares`: Funciones intermedias, como el registro de visitas.
+- `/middlewares`: Funciones intermedias, filtros de subida de archivos (Multer), validación de tokens JWT (Auth) y registro de visitas.
 - `/models`: Define las entidades de la base da datos (Usuario, Pedido) utilizando el ORM Sequelize.
-- `/public`: Archivos estáticos servidos directamente al cliente.
-- `/routes`: Definición de los endpoints y enrutadores.
+- `/public`: Archivos estáticos servidos al cliente, incluyendo el subdirectorio /uploads para imágenes.
+- `/routes`: Definición de los endpoints, enrutadores modulares y protección de rutas.
 - `index.js`: Punto de entrada principal de la aplicación.
 
 ## 🔗 Rutas del Proyecto
@@ -73,19 +74,37 @@ Rutas del navegador que se pueden visitar
 - `DELETE /usuarios/:id`: Elimina un usuario validando su ID.
 - `GET /usuarios/:id/pedidos`: Devuelve los datos del usuario junto con sus pedidos anidados, resolviendo la relación 1:N.  
 - `POST /usuarios/transaccion`: Endpoint especial que ejecuta una transacción anidada para crear un usuario y su pedido simultáneamente.
+- `POST /usuarios/:id/upload`: Permite la subida de una imagen de perfil (`avatar`) utilizando formato `multipart/form-data`, validando peso y extensión.
+
+## 🔐 Guía de Uso: Autenticación y Archivos
+Para consumir los endpoints privados de esta API, se debe seguir el flujo de securización:
+
+1. Obtener el Token: Realiza una petición `POST` a `/login` enviando las credenciales. El servidor responderá con un token alfanumérico.
+
+2. Autorización: En tu cliente REST (ej. Postman), incluye el token en los encabezados HTTP para las rutas protegidas:
+
+- Key: `Authorization`
+- Value: `Bearer <tu_token>`
+
+3. Manejo de Archivos: Para el endpoint `/upload`, asegúrate de enviar la petición con el tipo de contenido `form-data`, asignando el archivo a la clave `avatar`. Solo se permiten formatos de imagen estándares (JPEG, PNG, WEBP, GIF) con un límite de 2MB.
+
 
 ## 🧠 Justificaciones Técnicas
 
 - **Nombre del archivo principal (`index.js`):** Se eligió `index.js` por ser la convención estándar en el ecosistema Node.js, facilitando identificar rápidamente el punto de entrada del servidor.
 
-- **Estructura de carpetas:** Se adoptó una estructura modular separando rutas, middlewares, controladores y modelos para preparar la escalabilidad y facilitar el mantenimiento del código.
+- **Estructura Modular:** Se adoptó una estructura modular separando rutas, middlewares, controladores y modelos para preparar la escalabilidad y facilitar el mantenimiento del código.
 
-- **Uso de ORM (Sequelize):** Se implementó Sequelize para interactuar con la base de datos PostgreSQL, ya que abstrae la estructura SQL de las tablas y permite gestionar los datos mediante modelos en JavaScript.
+- **Uso de ORM (Sequelize):** Se implementó para interactuar con PostgreSQL, abstrayendo la estructura SQL y gestionando los datos mediante modelos en JavaScript.
 
 - **Estructura de carpetas:** Se centralizó el acceso a datos en los controladores, utilizando métodos nativos del ORM como `.create()`, `.findAll()`, `.update()` y `.destroy()`
 
-- **Manejo de Relaciones:** Se modeló una relación Uno a Muchos (1:N) utilizando los métodos hasMany() y belongsTo() para vincular las tablas de Usuarios y Pedidos.
+- **Manejo de Relaciones:** Se modeló una relación Uno a Muchos (1:N) utilizando los métodos `hasMany()` y `belongsTo()` para vincular las tablas de Usuarios y Pedidos.
 
 - **Transaccionalidad y Manejo de Errores:** Se implementaron bloques `try...catch` junto con métodos de Sequelize para capturar fallos. Si una operación combinada falla, se ejecuta un `ROLLBACK` para revertir los cambios y asegurar las propiedades ACID de la base de datos; si tiene éxito, se consolida con `COMMIT`.
 
 - **Persistencia de Logs:** Además del registro de visitas asíncrono implementado con `fs` (Módulo 6), se reutilizó el módulo de sistema de archivos para guardar de forma persistente los errores generados por transacciones fallidas en el archivo log.txt. 
+
+- **Seguridad Stateless (JWT):** Se optó por JSON Web Tokens para manejar la autenticación sin almacenar sesiones en el servidor, mejorando la escalabilidad de la API. Las contraseñas de los usuarios nunca se guardan en texto plano; se encriptan con un salt de 10 rondas utilizando `Bcryptjs`.
+
+- **Validación de Archivos (Multer):** Se implementó un middleware específico para interceptar la carga de archivos, validando estrictamente el `MIME type` y la extensión para prevenir inyecciones maliciosas en el directorio público.

@@ -7,7 +7,7 @@ const authRoutes = require('./auth')
 router.get('/bienvenida', (req, res) => {
     res.send(`
         <h1>Bienvenido a mi App Node & Express</h1>
-        <p>Este es el proyecto final del Módulo 6 y 7.</p>
+        <p>Este es el proyecto final del Módulo 6, 7 y 8.</p>
         <a href="/">Volver al inicio estático</a>
     `);
 });
@@ -16,7 +16,7 @@ router.get('/bienvenida', (req, res) => {
 router.get('/status', (req, res) => {
     res.json({
         estado: 'Servidor funcionando correctamente',
-        modulo: 7,
+        modulo: 8,
         tecnologias: ['Node.js', 'Express', 'fs', 'Express Router']
     });
 });
