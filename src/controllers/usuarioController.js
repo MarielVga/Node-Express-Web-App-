@@ -138,6 +138,34 @@ const crearUsuarioConPedido = async (req, res) => {
     }
 };
 
+// Subir imagen
+const subirAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ status: 'error', message: 'No se ha proporcionado ninguna imagen' });
+        }
+
+        const { id } = req.params;
+        const usuario = await Usuario.findByPk(id);
+
+        if (!usuario) {
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+        }
+
+        // Tarea PLUS: Asociamos la URL del archivo al registro de la base de datos[cite: 2]
+        const avatarPath = `/uploads/${req.file.filename}`;
+        await usuario.update({ avatar_url: avatarPath });
+
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Imagen subida y asociada al usuario correctamente', 
+            data: { avatar_url: avatarPath } 
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 // Exportación de los modulos
 module.exports = { 
                     crearUsuario, 
@@ -145,5 +173,6 @@ module.exports = {
                     actualizarUsuario, 
                     eliminarUsuario, 
                     getUsuarioConPedidos, 
-                    crearUsuarioConPedido 
+                    crearUsuarioConPedido,
+                    subirAvatar
                 };
