@@ -1,25 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const usuariosRoutes = require('./usuarios');
+const authRoutes = require('./auth')
 
-// Ruta 1 - Responde con HTML
+// Ruta responde con HTML
 router.get('/bienvenida', (req, res) => {
     res.send(`
         <h1>Bienvenido a mi App Node & Express</h1>
-        <p>Este es el proyecto final del Módulo 6 y 7.</p>
+        <p>Este es el proyecto final del Módulo 6, 7 y 8.</p>
         <a href="/">Volver al inicio estático</a>
     `);
 });
 
-// Ruta 2 - Responde con JSON
+// Ruta responde con JSON
 router.get('/status', (req, res) => {
     res.json({
         estado: 'Servidor funcionando correctamente',
-        modulo: 7,
+        modulo: 8,
         tecnologias: ['Node.js', 'Express', 'fs', 'Express Router']
     });
 });
 
-router.use('/usuarios', usuariosRoutes)
+router.use('/', authRoutes); // login
+router.use('/usuarios', usuariosRoutes);
+
 
 module.exports = router;

@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const sequelize = require('../config/database'); // Necesario para iniciar la transacción
 const Usuario = require('../models/Usuario');
 const Pedido = require('../models/Pedido');
@@ -7,8 +9,23 @@ const Pedido = require('../models/Pedido');
 // CREATE: Insertar un nuevo registro
 const crearUsuario = async (req, res) => {
     try {
-        const { nombre, email } = req.body;
-        const nuevoUsuario = await Usuario.create({ nombre, email });
+        const { nombre, email, password } = req.body;
+        // Encriptar contraseña
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const nuevoUsuario = await Usuario.create({ 
+                                                    nombre,
+                                                    email,
+                                                    password: hashedPassword // guardamos el hash
+                                                    });
+
+        const usuarioSinPassword = { 
+                                    id: nuevoUsuario.id,
+                                    nombre: nuevoUsuario.nombre,
+                                    email: nuevoUsuario.email
+                                };
+
         res.status(201).json({ status: 'success', message: 'Usuario creado', data: nuevoUsuario });
     } catch (error) {
         res.status(400).json({ status: 'error', message: error.message });
@@ -138,6 +155,68 @@ const crearUsuarioConPedido = async (req, res) => {
     }
 };
 
+// Subir imagen
+const subirAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ status: 'error', message: 'No se ha proporcionado ninguna imagen' });
+        }
+
+        const { id } = req.params;
+        const usuario = await Usuario.findByPk(id);
+
+        if (!usuario) {
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+        }
+
+        // Tarea PLUS: Asociamos la URL del archivo al registro de la base de datos[cite: 2]
+        const avatarPath = `/uploads/${req.file.filename}`;
+        await usuario.update({ avatar_url: avatarPath });
+
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Imagen subida y asociada al usuario correctamente', 
+            data: { avatar_url: avatarPath } 
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+// Login y generacion de JWT
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Verificamos si el usuario existe
+        const usuario = await Usuario.findOne({ where: { email } });
+        if (!usuario) {
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+        }
+
+        // Comparamos la contraseña enviada con la encriptada en la BD
+        const validPassword = await bcrypt.compare(password, usuario.password);
+        if (!validPassword) {
+            return res.status(401).json({ status: 'error', message: 'Contraseña incorrecta' });
+        }
+
+        // Generamos el Token JWT firmado
+        const token = jwt.sign(
+            { id: usuario.id, email: usuario.email }, // Payload (Datos útiles)
+            process.env.JWT_SECRET,                   // Nuestra firma secreta
+            { expiresIn: '1h' }                       // Tiempo de expiración
+        );
+
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Autenticación exitosa', 
+            data: { token } 
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 // Exportación de los modulos
 module.exports = { 
                     crearUsuario, 
@@ -145,5 +224,7 @@ module.exports = {
                     actualizarUsuario, 
                     eliminarUsuario, 
                     getUsuarioConPedidos, 
-                    crearUsuarioConPedido 
+                    crearUsuarioConPedido,
+                    subirAvatar,
+                    login
                 };
